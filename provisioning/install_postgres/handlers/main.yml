@@ -1,0 +1,12 @@
+---
+# handlers file for install_postgres
+
+- name: Disable module postgresql from CentOS repository
+  ansible.builtin.shell: dnf -qy module disable postgresql
+
+- name: Enable and start service
+  ansible.builtin.service:
+    name: postgresql-16
+    state: started
+    enabled: true
+

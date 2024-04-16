@@ -1,0 +1,6 @@
+---
+# handlers file for install_barman
+
+- name: Disable module postgresql from CentOS repository
+  ansible.builtin.shell: dnf -qy module disable postgresql
+

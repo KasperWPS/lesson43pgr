@@ -1,0 +1,92 @@
+---
+# tasks file for postgres_replication
+
+- name: install base tools
+  ansible.builtin.dnf:
+    name:
+      - python3-pexpect.noarch
+      - python3-psycopg2
+    state: present
+    update_cache: true
+
+- name: Create replicator user
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: replication
+    password: '{{ replicator_password }}'
+    role_attr_flags: REPLICATION
+  ignore_errors: true
+  when: (ansible_hostname == "node1")
+
+- name: Stop postgresql-server on node2
+  ansible.builtin.service:
+    name: postgresql-16
+    state: stopped
+  when: (ansible_hostname == "node2")
+
+- name: Copy postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: /var/lib/pgsql/16/data/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: (ansible_hostname == "node1")
+
+- name: copy pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: /var/lib/pgsql/16/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: (ansible_hostname == "node1")
+
+- name: Restart postgresql-server on node1
+  ansible.builtin.service: 
+    name: postgresql-16
+    state: restarted
+  when: (ansible_hostname == "node1")
+
+- name: Remove files from data catalog
+  ansible.builtin.file:
+    path: /var/lib/pgsql/16/data/
+    state: absent
+  when: (ansible_hostname == "node2")
+
+- name: Copy files from master to slave
+  become_user: postgres
+  expect:
+    command: 'pg_basebackup -h {{ master_ip }} -U replication -p 5432 -D /var/lib/pgsql/16/data/ -R -P'
+    responses:
+      '.*Password*': "{{ replicator_password }}"
+  when: (ansible_hostname == "node2")
+
+- name: Copy postgresql.conf
+  ansible.builtin.template:
+    src: postgresql.conf.j2
+    dest: /var/lib/pgsql/16/data/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: (ansible_hostname == "node2")
+
+- name: Copy pg_hba.conf
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: /var/lib/pgsql/16/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  when: (ansible_hostname == "node2")
+
+- name: start postgresql-server on node2
+  ansible.builtin.service:
+    name: postgresql-16
+    state: started
+  when: (ansible_hostname == "node2")
+
+
+
+
+

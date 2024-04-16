@@ -1,0 +1,33 @@
+---
+- name: Add GPG key postgresql repository
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://download.postgresql.org/pub/repos/yum/keys/PGDG-RPM-GPG-KEY-RHEL
+
+- name: Install repo
+  ansible.builtin.dnf:
+    name: 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm'
+    state: present
+  notify: Disable module postgresql from CentOS repository
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Install PostgreSQL-server 16
+  ansible.builtin.dnf:
+    name: postgresql16-server
+    state: present
+    update_cache: true
+
+- name: Check database init
+  ansible.builtin.stat:
+    path: '/var/lib/pgsql/16/data/pg_stat'
+  register: stat_result
+
+- name: Initialization database
+  shell: /usr/pgsql-16/bin/postgresql-16-setup initdb
+  when: not stat_result.stat.exists
+  notify: Enable and start service
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

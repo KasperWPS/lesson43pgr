@@ -1,0 +1,38 @@
+[
+  {
+    "name": "node1",
+    "cpus": 2,
+    "gui": false,
+    "box": "centos/8",
+    "private_network": 
+    [
+      { "ip": "192.168.56.11", "adapter": 2, "netmask": "255.255.255.0" }
+    ],
+    "memory": 1024,
+    "no_share": true
+  },
+  {
+    "name": "node2",
+    "cpus": 2,
+    "gui": false,
+    "box": "centos/8",
+    "private_network":
+    [
+      { "ip": "192.168.56.12", "adapter": 2, "netmask": "255.255.255.0" }
+    ],
+    "memory": 1024,
+    "no_share": true
+  },
+  {
+    "name": "barman",
+    "cpus": 1,
+    "gui": false,
+    "box": "centos/8",
+    "private_network":
+    [
+      { "ip": "192.168.56.13",  "adapter": 2, "netmask": "255.255.255.0" }
+    ],
+    "memory": 1024,
+    "no_share": true
+  }
+]
